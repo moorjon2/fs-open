@@ -11,7 +11,7 @@ const Part = (props) => {
 }
 
 const Content = (props) => {
-  console.log("Contentn component")
+  console.log("Content component")
   console.log(props.parts)
   return (
     <>
