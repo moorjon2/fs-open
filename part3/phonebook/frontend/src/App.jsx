@@ -6,27 +6,13 @@ import Persons from "./components/Persons.jsx";
 import Notification from './components/Notification.jsx'
 import newContactService from "./services/contact.js"
 
-
-// For myself for future reference
-// two terminal windows
-// on the first window
-// 1. > npm install axios
-// 2. > npm install json-server --save-dev
-// 3. import axios from 'axios'
-// 4. make the db.json file in the root dir
-// 5. in package.json in the scripts after preview add
-//    "server": "json-server -p 3001 db.json"
-// 6. > npm run server
-// on the second terminal window, > npm run dev
-
-
 const App = () => {
     const [persons, setPersons] = useState([])
 
     const hook = () => {
         console.log('effect')
         axios
-            .get('http://localhost:3001/persons')
+            .get('http://localhost:3001/api/persons')
             .then(response => {
                 console.log('promise fulfilled');
                 setPersons(response.data)
