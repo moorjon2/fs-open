@@ -1,7 +1,7 @@
 # flyctl launch added from backend/.gitignore
 backend/**/node_modules
 backend/dist
-backend/**/.env
+.env
 
 # flyctl launch added from frontend/.gitignore
 # Logs

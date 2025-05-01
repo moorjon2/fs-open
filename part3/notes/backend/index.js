@@ -1,33 +1,8 @@
+require('dotenv').config()
+const Note = require('./models/note')
 const express = require('express')
-const path = require('path')
-const mongoose = require('mongoose')
 
 const app = express()
-
-const password = process.argv[2]
-const url = `mongodb+srv://mfernandezm85:${password}@cluster0.emxo6rw.mongodb.net/noteApp?retryWrites=true&w=majority&appName=Cluster0`
-
-mongoose.set('strictQuery', false)
-mongoose.connect(url)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(error => console.error('MongoDB connection error:', error.message))
-
-const noteSchema = new mongoose.Schema({
-  content: String,
-  important: Boolean,
-})
-
-// Formatting the object returned by mongoose
-// don't return the mongo versioning field __v
-noteSchema.set('toJSON', {
-    transform: (document, returnObject) => {
-        returnObject.id = returnObject._id.toString()
-        delete returnObject._id
-        delete returnObject.__v
-    }
-})
-
-const Note = mongoose.model('Note', noteSchema)
 
 // Middlewares
 app.use(express.json())
