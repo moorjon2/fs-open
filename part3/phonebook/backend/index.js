@@ -54,6 +54,30 @@ app.get('/info', (req, res) => {
     })
 })
 
+// Add new person to DB
+app.post('/api/persons', (req, res) => {
+    const { name, number } = req.body
+
+    if (!name || !number) {
+        return res.status(400).json({ error: 'name or number missing' })
+    }
+
+    const person = new Person({
+        name,
+        number,
+    })
+
+    person.save()
+        .then(savedPerson => {
+            res.json(savedPerson)
+        })
+        .catch(error => {
+            console.error('Error saving person:', error)
+            res.status(500).json({ error: 'failed to save person' })
+        })
+})
+
+
 // Unknown endpoint handler
 app.use((req, res) => {
     res.status(404).send({ error: 'unknown endpoint' })
