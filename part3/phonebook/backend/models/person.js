@@ -1,11 +1,19 @@
 const mongoose = require('mongoose')
 
+mongoose.set('strictQuery', false)
+
 const url = process.env.MONGODB_URI
 
-mongoose.set('strictQuery', false)
+if (!url) {
+    console.error('MONGODB_URI not defined in .env')
+    process.exit(1)
+}
+
+console.log('Connecting to MongoDB:', url)
+
 mongoose.connect(url)
-    .then(() => console.log('connected to MongoDB'))
-    .catch(err => console.error('MongoDB error:', err.message))
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(error => console.error('MongoDB connection error:', error.message))
 
 const personSchema = new mongoose.Schema({
     name: String,
@@ -13,10 +21,10 @@ const personSchema = new mongoose.Schema({
 })
 
 personSchema.set('toJSON', {
-    transform: (doc, ret) => {
-        ret.id = ret._id.toString()
-        delete ret._id
-        delete ret.__v
+    transform: (document, returnedObject) => {
+        returnedObject.id = returnedObject._id.toString()
+        delete returnedObject._id
+        delete returnedObject.__v
     }
 })
 
