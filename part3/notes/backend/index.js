@@ -1,81 +1,117 @@
 require('dotenv').config()
-const Note = require('./models/note')
 const express = require('express')
+const Note = require('./models/note')
 
 const app = express()
 
-// Middlewares
-app.use(express.json())
-app.use(express.static('dist'))
+// Request logger
+const requestLogger = (request, response, next) => {
+    console.log('Method:', request.method)
+    console.log('Path:  ', request.path)
+    console.log('Body:  ', request.body)
+    console.log('---')
+    next()
+}
 
-// Logger
-app.use((req, res, next) => {
-  console.log('Method:', req.method)
-  console.log('Path:  ', req.path)
-  console.log('Body:  ', req.body)
-  console.log('---')
-  next()
+// Error handler middleware
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' })
+    }
+
+    next(error)
+}
+
+// --- Middleware ---
+app.use(express.static('dist'))
+app.use(express.json())
+app.use(requestLogger)
+
+// --- ROUTES ---
+
+app.get('/', (request, response) => {
+    response.send('<h1>Hello World!</h1>')
 })
 
 // GET all notes
-app.get('/api/notes', (req, res) => {
-  Note.find({}).then(notes => {
-    res.json(notes)
-  })
+app.get('/api/notes', (request, response) => {
+    Note.find({}).then((notes) => {
+        response.json(notes)
+    })
 })
 
-// GET note by id
-app.get('/api/notes/:id', (req, res) => {
-  Note.findById(req.params.id)
-      .then(note => {
-        if (note) {
-          res.json(note)
-        } else {
-          res.status(404).end()
-        }
-      })
-      .catch(error => {
-        console.error(error)
-        res.status(400).send({ error: 'malformatted id' })
-      })
+// GET single note
+app.get('/api/notes/:id', (request, response, next) => {
+    Note.findById(request.params.id)
+        .then((note) => {
+            if (note) {
+                response.json(note)
+            } else {
+                response.status(404).end()
+            }
+        })
+        .catch((error) => next(error))
 })
 
 // POST new note
-app.post('/api/notes', (req, res) => {
-  const body = req.body
+app.post('/api/notes', (request, response) => {
+    const body = request.body
 
-  if (!body.content) {
-    return res.status(400).json({ error: 'content missing' })
-  }
+    if (!body.content) {
+        return response.status(400).json({ error: 'content missing' })
+    }
 
-  const note = new Note({
-    content: body.content,
-    important: body.important || false,
-  })
+    const note = new Note({
+        content: body.content,
+        important: body.important || false,
+    })
 
-  note.save().then(savedNote => {
-    res.json(savedNote)
-  })
+    note.save().then((savedNote) => {
+        response.json(savedNote)
+    })
 })
 
-// DELETE note
-app.delete('/api/notes/:id', (req, res) => {
-  Note.findByIdAndDelete(req.params.id)
-      .then(() => {
-        res.status(204).end()
-      })
-      .catch(error => {
-        console.error(error)
-        res.status(400).send({ error: 'malformatted id' })
-      })
+// PUT update an individual note
+app.put('/api/notes/:id', (request, response, next) => {
+    const { content, important } = request.body
+
+    Note.findById(request.params.id)
+        .then((note) => {
+            if (!note) {
+                return response.status(404).end()
+            }
+
+            note.content = content
+            note.important = important
+
+            return note.save().then((updatedNote) => {
+                response.json(updatedNote)
+            })
+        })
+        .catch((error) => next(error))
 })
 
-// unknown route middleware
-app.use((req, res) => {
-  res.status(404).send({ error: 'unknown endpoint' })
+// DELETE a single Note
+app.delete('/api/notes/:id', (request, response, next) => {
+    Note.findByIdAndDelete(request.params.id)
+        .then((result) => {
+            response.status(204).end()
+        })
+        .catch((error) => next(error))
 })
 
-const PORT = process.env.PORT || 3001
+// Unknown endpoint handler
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
+app.use(errorHandler)
+
+// Start Server
+const PORT = process.env.PORT
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+    console.log(`Server running on port ${PORT}`)
 })
