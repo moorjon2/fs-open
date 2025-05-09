@@ -40,13 +40,18 @@ const App = () => {
                 setPersons(persons.concat(returnedContact))
                 setNewName('')
                 setNewNumber('')
-                setMessage(`Added ${returnedContact.name}`)
+                // Show success message
+                setMessage({ type: 'success', text: `Added ${returnedContact.name}` })
                 setTimeout(() => {
                     setMessage(null)
                 }, 5000)
             })
             .catch(error => {
-                console.error(`Error adding contact: ${error}`)
+                const errorMessage = error.response?.data?.error || 'An error occurred'
+                setMessage({ type: 'error', text: errorMessage })
+                setTimeout(() => {
+                    setMessage(null)
+                }, 5000)
             })
     }
 
